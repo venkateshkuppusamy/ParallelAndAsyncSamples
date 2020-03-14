@@ -14,7 +14,7 @@ namespace SimpleParallel
             sw.Start();
             action.Invoke();
             sw.Stop();
-            Console.WriteLine($"***************************Method {action.Method.Name}: {sw.ElapsedMilliseconds}ms **************************");
+            Console.WriteLine($"***************************Method {action.Method.Name}: {sw.Elapsed.TotalMilliseconds}ms **************************");
         }
 
        

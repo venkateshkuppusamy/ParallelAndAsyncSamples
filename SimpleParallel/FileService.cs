@@ -10,53 +10,134 @@ namespace SimpleParallel
 {
     class FileService
     {
-        public void ReadFileSync() {
-            List<Task> tasks = new List<Task>();
+        public void ReadFileProcessLineSync()
+        {
             string line;
             int counter = 0;
-            System.IO.StreamReader file = new System.IO.StreamReader($@"{Directory.GetCurrentDirectory()}\Files\Sample.txt");
+            StreamReader file = new StreamReader($@"{Directory.GetCurrentDirectory()}\Files\Sample.txt");
             while ((line = file.ReadLine()) != null)
             {
-                System.Console.WriteLine(line);
-                tasks.Add(ProcessLineNewTask(line));
+                ProcessLine(line);
                 counter++;
             }
-
-            Task.WaitAll(tasks.ToArray());
             file.Close();
+        }
+
+        public void ReadFileSyncProcessLineMultileTask() {
+
+            var sw = Stopwatch.StartNew();
+            sw.Start();
+
+            List<Task<int>> tasks = new List<Task<int>>();
+            string line;
+            int counter = 0;
+            StreamReader file = new StreamReader($@"{Directory.GetCurrentDirectory()}\Files\Sample.txt");
+            using (SemaphoreSlim concurrencySemaphore = new SemaphoreSlim(100))
+            {
+                while ((line = file.ReadLine()) != null)
+                {
+                    tasks.Add(ProcessLineNewTask(line, concurrencySemaphore));
+                    counter++;
+                }
+            }
+            Task.WaitAll(tasks.ToArray());
+            int result = 0;
+            foreach (var item in tasks)
+            {
+                result = result + item.Result;
+            }
+            Console.WriteLine(result);
+            file.Close();
+            sw.Stop();
+            Console.WriteLine($"{nameof(FileService.ReadFileSyncProcessLineMultileTask)} {sw.ElapsedMilliseconds}ms");
 
         }
 
-        public async void ReadFileAsync() {
+        public async void ReadFileProcessLineAsync()
+        {
             var sw = Stopwatch.StartNew();
             sw.Start();
-            List<Task> tasks = new List<Task>();
             string line;
             int counter = 0;
             StreamReader file = new StreamReader($@"{Directory.GetCurrentDirectory()}\Files\Sample.txt");
             while ((line = await file.ReadLineAsync()) != null)
             {
-                System.Console.WriteLine(line);
-                //tasks.Add(ProcessLineNewTask(line));
-                //ProcessLine();
+                ProcessLine(line);
                 counter++;
             }
-            Task.WaitAll(tasks.ToArray());
             file.Close();
             sw.Stop();
-            Console.WriteLine($"{nameof(FileService.ReadFileAsync)} {sw.ElapsedMilliseconds}ms");
+            Console.WriteLine($"{nameof(FileService.ReadFileProcessLineAsync)} {sw.ElapsedMilliseconds}ms");
+        }
+
+
+        public async void ReadFileAsyncAndProcessLineMultipleTask() {
+            var sw = Stopwatch.StartNew();
+            sw.Start();
+            List<Task<int>> tasks = new List<Task<int>>();
+            string line;
+            long counter = 0;
+            StreamReader file = new StreamReader($@"{Directory.GetCurrentDirectory()}\Files\Sample.txt");
+            using (SemaphoreSlim concurrencySemaphore = new SemaphoreSlim(100))
+            {
+                while ((line = await file.ReadLineAsync()) != null)
+                {
+                    concurrencySemaphore.Wait();
+                    tasks.Add(ProcessLineNewTask(line,concurrencySemaphore));
+                    counter++;
+                }
+            }
+            Task.WaitAll(tasks.ToArray());
+            long result = 0;
+            foreach (var item in tasks)
+            {
+                result = result + item.Result;
+            }
+            Console.WriteLine(result);
+            file.Close();
+            sw.Stop();
+            Console.WriteLine($"{nameof(FileService.ReadFileAsyncAndProcessLineMultipleTask)} {sw.ElapsedMilliseconds}ms");
         }
 
         void ProcessLine(string str)
         {
-            Thread.Sleep(100);
+            for (int i = 0; i < 100000; i++)
+            {
+
+            }
+            
+        }
+        static int counter =0;
+        Task<int> ProcessLineNewTask(string str, SemaphoreSlim concurrencySemaphore)
+        {
+            var task = Task.Run(() =>
+            {
+                int counter = 0;
+                for (int i = 0; i < 100000; i++)
+                {
+                    counter++;
+                }
+                return counter;
+            });
+            
+            //var task = Task.Run(() => { string[] strArray = str.Split(" "); str.Insert(0, "start");  });
+            concurrencySemaphore.Release();
+            return task;
         }
 
         Task ProcessLineNewTask(string str)
         {
-            return Task.Delay(100);
+
+            var task = Task.Run(() =>
+            {
+                for (int i = 0; i < 100000; i++)
+                {
+
+                }
+            });
+            //var task = Task.Run(() => { string[] strArray = str.Split(" "); str.Insert(0, "start"); });
+            return task;
         }
 
-        
     }
 }

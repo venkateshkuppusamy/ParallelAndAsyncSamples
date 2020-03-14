@@ -13,18 +13,23 @@ namespace SimpleParallel
             Console.WriteLine("The number of processors " +
         "on this computer is {0}.",
         Environment.ProcessorCount);
-            //Colors.PrintColors();
-            // Numbers.Print();
 
             //MetricsService ms = new MetricsService();
-            //Numbers num = new Numbers();
-            //ms.Collect(num.FindNumberDivisorsSequential);
-            //ms.Collect(num.FindNumberDivisorsParallel);
+            //ms.Collect(new FileService().ReadFileProcessLineSync);
 
-            MetricsService ms = new MetricsService();
-            ms.Collect(new FileService().ReadFileSync);
+            //new FileService().ReadFileProcessLineAsync();
 
-            new FileService().ReadFileAsync();
+            new FileService().ReadFileSyncProcessLineMultileTask();
+
+            //new FileService().ReadFileAsyncAndProcessLineMultipleTask();
+
+            //MetricsService ms2 = new MetricsService();
+            //string str = "The thread 0x1124 has exited with code 0";
+            //ms2.Collect(() => str.EndsWith('a'));
+
+            //ms2.Collect(() => str.Replace('a','b'));
+            //ms2.Collect(() => str.Split(" "));
+
             Console.ReadLine();
         }
 
