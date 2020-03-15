@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace SimpleParallel
 {
-    class FileService
+    public class FileService
     {
         public void ReadFileProcessLineSync()
         {
@@ -97,6 +98,47 @@ namespace SimpleParallel
             file.Close();
             sw.Stop();
             Console.WriteLine($"{nameof(FileService.ReadFileAsyncAndProcessLineMultipleTask)} {sw.ElapsedMilliseconds}ms");
+        }
+
+
+        public void ReadFileAllLinesAndProcessSequ()
+        {
+            string[] lines = File.ReadAllLines($@"{Directory.GetCurrentDirectory()}\Files\Sample.txt");
+            List<List<int>> charNumbers = new List<List<int>>();
+            foreach (var item in lines)
+            {
+                List<int> asciiChar = new List<int>();
+                for (int i = 0; i < item.Length - 1; i++)
+                {
+                   asciiChar.Add((int)Convert.ToChar(item[0]));
+                    asciiChar.Sort();
+                }
+                charNumbers.Add(asciiChar);
+            }
+            Console.WriteLine($"Input Lines {lines.Length} Output Lines {charNumbers.Count}");
+        }
+        public void ReadFileAllLinesAndProcessParallel()
+        {
+            string[] lines = File.ReadAllLines($@"{Directory.GetCurrentDirectory()}\Files\Sample.txt");
+            List<List<int>> charNumbers = new List<List<int>>();
+            int counter = 0;
+            object lockObject = new object();
+            Parallel.ForEach(lines, item =>
+              {
+                  List<int> asciiChar = new List<int>();
+                  for (int i = 0; i < item.Length - 1; i++)
+                  {
+                      asciiChar.Add((int)Convert.ToChar(item[0]));
+                      asciiChar.Sort();
+                  }
+                  lock (lockObject)
+                  {
+                      counter++;
+                      charNumbers.Add(asciiChar);
+                  }
+              }
+            );
+            Console.WriteLine($"Input Lines {lines.Length} Output Lines {charNumbers.Count}");
         }
 
         void ProcessLine(string str)

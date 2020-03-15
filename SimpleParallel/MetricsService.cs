@@ -8,6 +8,8 @@ namespace SimpleParallel
 {
     public class MetricsService
     {
+        public static MetricsService Get { get { return new MetricsService(); } }
+        
         public void Collect(Action action)
         {
             var sw = Stopwatch.StartNew();
